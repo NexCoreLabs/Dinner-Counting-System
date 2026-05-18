@@ -1,0 +1,22 @@
+{
+  "name": "squ-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "واتساب بوت لإحصاء وجبات السكن - جامعة السلطان قابوس",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.3",
+    "qrcode-terminal": "^0.12.0",
+    "twilio": "^6.0.2",
+    "whatsapp-web.js": "^1.23.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

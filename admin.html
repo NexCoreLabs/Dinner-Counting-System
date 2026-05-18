@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم الإدارة — SQU</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #1a5c3a;
+      --green-light: #2a7a50;
+      --gold: #c8a84b;
+      --gold-light: #e2c97e;
+      --bg: #f4f1eb;
+      --surface: #ffffff;
+      --border: #d8d0bc;
+      --text: #1c1c1c;
+      --muted: #6b6455;
+      --danger: #c0392b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
+    header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    header h1 { font-size: 1.6rem; color: var(--green); }
+    header p { color: var(--muted); font-size: 0.95rem; }
+    .btn-link, .btn-action { border: none; border-radius: 12px; cursor: pointer; font-weight: 700; transition: transform .15s, box-shadow .15s; }
+    .btn-link { background: #fff; color: var(--green); padding: 12px 18px; border: 1px solid var(--green); }
+    .btn-link:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(26,92,58,.12); }
+    .btn-action { background: var(--green); color: #fff; padding: 12px 18px; }
+    .btn-action:hover { background: var(--green-light); }
+    .cards { display: grid; grid-template-columns: repeat( auto-fit, minmax(180px, 1fr) ); gap: 16px; margin-bottom: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.06); }
+    .card h2 { font-size: 0.9rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 12px; }
+    .card p { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .card small { display: block; margin-top: 8px; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    .status { display: block; margin-top: 10px; color: var(--green); font-size: .95rem; }
+    .status.error { color: var(--danger); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); }
+    th, td { padding: 14px 12px; border-bottom: 1px solid #e9e2d6; text-align: right; font-size: .95rem; }
+    th { font-weight: 700; letter-spacing: .04em; color: var(--muted); background: #fbf8f4; }
+    tbody tr:hover { background: rgba(26,92,58,.04); }
+    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; font-size: .8rem; color: #fff; }
+    .badge.yes { background: #1a5c3a; }
+    .badge.no { background: #c0392b; }
+    .badge.waiting { background: #7a6a36; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 24px; }
+    .panel h3 { margin-bottom: 14px; color: var(--green); }
+    @media (max-width: 768px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .cards { grid-template-columns: repeat( auto-fit, minmax(160px, 1fr) ); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>لوحة تحكم الإدارة</h1>
+        <p>عرض البيانات الأسبوعية للطالبات واستبيانات وجبة العشاء.</p>
+      </div>
+      <div class="actions">
+        <a class="btn-link" href="/">⟵ نموذج التسجيل</a>
+        <button class="btn-action" id="refreshBtn">تحديث</button>
+        <button class="btn-action" id="sendPollBtn">إرسال الاستبيان</button>
+        <button class="btn-action" id="sendRemindersBtn">إرسال التذكيرات</button>
+      </div>
+    </header>
+
+    <div class="cards">
+      <div class="card">
+        <h2>الأسبوع الحالي</h2>
+        <p id="weekValue">...</p>
+      </div>
+      <div class="card">
+        <h2>إجمالي الطالبات</h2>
+        <p id="totalValue">...</p>
+        <small>المسجلات في النظام</small>
+      </div>
+      <div class="card">
+        <h2>مؤكّدات الحضور</h2>
+        <p id="attendingValue">...</p>
+      </div>
+      <div class="card">
+        <h2>غير الحاضرات</h2>
+        <p id="notAttendingValue">...</p>
+      </div>
+      <div class="card">
+        <h2>لم ترد</h2>
+        <p id="noResponseValue">...</p>
+      </div>
+      <div class="card">
+        <h2>عدد الوجبات المتوقع</h2>
+        <p id="estimatedValue">...</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>ملخص الردود</h3>
+      <p id="statusMessage" class="status">جارٍ تحميل البيانات...</p>
+    </div>
+
+    <div class="panel table-wrap">
+      <h3>قائمة الطالبات</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الرقم الجامعي</th>
+            <th>رقم الجوال</th>
+            <th>الوحدة</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTableBody">
+          <tr><td colspan="5" style="text-align:center; color: var(--muted);">جارٍ التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const weekValue = document.getElementById('weekValue');
+    const totalValue = document.getElementById('totalValue');
+    const attendingValue = document.getElementById('attendingValue');
+    const notAttendingValue = document.getElementById('notAttendingValue');
+    const noResponseValue = document.getElementById('noResponseValue');
+    const estimatedValue = document.getElementById('estimatedValue');
+    const statusMessage = document.getElementById('statusMessage');
+    const studentsTableBody = document.getElementById('studentsTableBody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const sendPollBtn = document.getElementById('sendPollBtn');
+    const sendRemindersBtn = document.getElementById('sendRemindersBtn');
+
+    async function fetchDashboard() {
+      statusMessage.classList.remove('error');
+      statusMessage.textContent = 'جارٍ تحميل البيانات...';
+      studentsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--muted);">جارٍ التحميل...</td></tr>';
+
+      try {
+        const res = await fetch('/api/dashboard');
+        if (!res.ok) throw new Error('Failed to load dashboard');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Failed to load dashboard');
+
+        const { report, students, responses } = data;
+        weekValue.textContent = report.week;
+        totalValue.textContent = report.total;
+        attendingValue.textContent = report.attending;
+        notAttendingValue.textContent = report.notAttending;
+        noResponseValue.textContent = report.noResponse;
+        estimatedValue.textContent = report.estimatedMeals;
+
+        const responseMap = new Map(responses.map(item => [item.phone, item.answer]));
+        studentsTableBody.innerHTML = '';
+
+        students.forEach(student => {
+          const answer = responseMap.get(student.phone) || 'waiting';
+          const badgeClass = answer === 'yes' ? 'yes' : answer === 'no' ? 'no' : 'waiting';
+          const badgeText = answer === 'yes' ? 'نعم' : answer === 'no' ? 'لا' : 'لم ترد';
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${student.full_name}</td>
+            <td>${student.student_id}</td>
+            <td>+968 ${student.phone}</td>
+            <td>${student.block} - ${student.room_number}</td>
+            <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+          `;
+          studentsTableBody.appendChild(row);
+        });
+
+        statusMessage.textContent = 'تم تحميل البيانات بنجاح.';
+      } catch (error) {
+        console.error(error);
+        statusMessage.textContent = 'فشل تحميل البيانات. تأكد من تشغيل السيرفر ووجود الاتصال.';
+        statusMessage.classList.add('error');
+        studentsTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--danger);">فشل تحميل بيانات الطالبات.</td></tr>';
+      }
+    }
+
+    async function runAction(path, successText) {
+      try {
+        const res = await fetch(path, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Action failed');
+        statusMessage.textContent = successText;
+      } catch (error) {
+        console.error(error);
+        statusMessage.textContent = 'فشل تنفيذ العملية. تأكد من أن السيرفر يعمل.';
+        statusMessage.classList.add('error');
+      }
+    }
+
+    refreshBtn.addEventListener('click', fetchDashboard);
+    sendPollBtn.addEventListener('click', () => runAction('/api/test/send-poll', 'تم إرسال الاستبيان تجريبياً.'));
+    sendRemindersBtn.addEventListener('click', () => runAction('/api/test/send-reminders', 'تم إرسال التذكيرات تجريبياً.'));
+
+    fetchDashboard();
+  </script>
+</body>
+</html>
