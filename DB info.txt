@@ -1,7 +1,0 @@
-Supabase:
-
-Project name:
-Dinner Counting System
-
-DB pass:
-8pfJXuJvM2HH2HtW
